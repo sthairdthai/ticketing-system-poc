@@ -1,5 +1,4 @@
 import axios from 'axios';
-// import faker from 'faker';
 
 // Config
 const API_BASE_URL = 'http://localhost:3000/api/ticket'; // Adjust the URL if necessary
@@ -9,11 +8,29 @@ const TOTAL_TICKETS = 100;
 // Utility function to simulate random time intervals
 const getRandomTime = (min, max) => Math.floor(Math.random() * (max - min) + min);
 
+// Function to get available tickets from the server
+const getAvailableTickets = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/available`);
+    return response.data.availableTickets;
+  } catch (error) {
+    console.error('Error fetching available tickets:', error.message);
+    return [];
+  }
+};
+
 // Function to simulate a user buying a ticket
 const simulateUserAction = async (userId) => {
   try {
-    // Get a random ticket ID to reserve
-    const ticketId = Math.floor(Math.random() * TOTAL_TICKETS) + 1;
+    // Get the available tickets
+    const availableTickets = await getAvailableTickets();
+    if (availableTickets.length === 0) {
+      console.log(`No tickets available for User ${userId}`);
+      return;
+    }
+
+    // Get a random ticket ID from the available tickets
+    const ticketId = availableTickets[Math.floor(Math.random() * availableTickets.length)];
 
     // Reserve a ticket
     console.log(`User ${userId} is attempting to reserve Ticket ${ticketId}`);
