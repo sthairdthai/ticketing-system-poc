@@ -1,38 +1,38 @@
+import { Queue, Worker } from 'bullmq'
 
-// packages/mq/connection.ts
-export class MockQueueConnection {
-    publish(queueName: string, message: any) {
-        console.log(`[Publish] Queue: ${queueName}, Message:`, message)
-    }
-
-    consume(queueName: string, handler: (message: any) => void) {
-        console.log(`[Consume] Listening on Queue: ${queueName}`)
-        // simulate an incoming message after 2 seconds
-        setTimeout(() => {
-            handler({ text: 'Sample message from queue.' })
-        }, 2000)
-    }
+// Define Redis connection configuration once
+export const redisConfig = {
+    host: 'localhost', // Your Redis host
+    port: 6379,        // Your Redis port
 }
 
-export const queueMockConnection = new MockQueueConnection()
+// Create a queue with the Redis config
+const ticketQueue = new Queue('ticketQueue', {
+    connection: redisConfig,
+})
 
-type Handler = (data: any) => void
+// Set up the worker to process jobs from the queue
+const worker = new Worker('ticketQueue', async job => {
+    console.log(`Processing job ${job.id}:`, job.data)
+    // Simulate the ticket-buying process or any other processing you need
+    // You can access job data with job.data
+}, {
+    connection: redisConfig,
+})
 
-
-class QueueConnection {
-    private handlers: Record<string, Handler[]> = {}
-
-    publish(queueName: string, data: any) {
-        const handlers = this.handlers[queueName] || []
-        handlers.forEach(handler => handler(data))
-    }
-
-    consume(queueName: string, handler: Handler) {
-        if (!this.handlers[queueName]) {
-            this.handlers[queueName] = []
-        }
-        this.handlers[queueName].push(handler)
-    }
+// Function to add a job to the queue
+async function addJob() {
+    //   await ticketQueue.add('buy-ticket', {
+    //     ticketType: 'VIP',
+    //     quantity: 2,
+    //   })
+    await ticketQueue.add('buy-ticket', {
+        ticketType: 'VIP',
+        quantity: 2,
+    }, {
+        delay: 10000,  // Delay the job for 10 seconds
+    })
 }
 
-export const queueConnection = new QueueConnection()  
+// Export the queue and worker so you can use them elsewhere
+export { ticketQueue, worker, addJob }
