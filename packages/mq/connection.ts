@@ -21,18 +21,21 @@ const worker = new Worker('ticketQueue', async job => {
 })
 
 // Function to add a job to the queue
-async function addJob() {
-    //   await ticketQueue.add('buy-ticket', {
-    //     ticketType: 'VIP',
-    //     quantity: 2,
-    //   })
-    await ticketQueue.add('buy-ticket', {
-        ticketType: 'VIP',
-        quantity: 2,
-    }, {
-        delay: 10000,  // Delay the job for 10 seconds
-    })
-}
+// async function addJob() {
+//     //   await ticketQueue.add('buy-ticket', {
+//     //     ticketType: 'VIP',
+//     //     quantity: 2,
+//     //   })
+//     await ticketQueue.add('buy-ticket', {
+//         ticketType: 'VIP',
+//         quantity: 2,
+//     }, {
+//         delay: 10000,  // Delay the job for 10 seconds
+//     })
+
+//     console.log(`Job added: ${job.id}`)
+// }
 
 // Export the queue and worker so you can use them elsewhere
-export { ticketQueue, worker, addJob }
+// export { ticketQueue, worker, addJob }
+export { ticketQueue, worker }

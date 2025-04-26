@@ -1,51 +1,92 @@
+// queue.ts
 import { Queue, Worker } from 'bullmq'
-import { redisConfig } from './connection' // Import the shared Redis config
+import { redisConfig } from './connection'
 
-const TICKET_BOUGHT_QUEUE = 'ticket-bought'
+// Define queue names
+const TICKET_QUEUE = 'ticketQueue'
+const TICKET_BOUGHT_QUEUE = 'ticketBoughtQueue'
 
-// Publish the event (enqueue a job to the queue)
-export const publishTicketBoughtEvent = async (data: { ticketId: string, userId: string }) => {
-    try {
-        // Create a new queue instance for ticket-bought events
-        const queue = new Queue(TICKET_BOUGHT_QUEUE, {
-            connection: redisConfig, // Reuse the shared Redis config
-        })
+// Create queue instances ONCE (important for efficiency)
+const ticketQueue = new Queue(TICKET_QUEUE, {
+  connection: redisConfig,
+})
 
-        // Add a job to the queue
-        await queue.add('ticket-bought', data)
-        console.log(`Ticket bought event published: ${JSON.stringify(data)}`)
-    } catch (error) {
-        console.error('Error publishing ticket bought event:', error)
-    }
+const ticketBoughtQueue = new Queue(TICKET_BOUGHT_QUEUE, {
+  connection: redisConfig,
+})
+
+/**
+ * Publish a job to ticketQueue (user is buying a ticket)
+ */
+export const publishTicketPurchase = async (data: { ticketType: string, quantity: number }) => {
+  try {
+    await ticketQueue.add('buy-ticket', data)
+    console.log(`Ticket purchase job published: ${JSON.stringify(data)}`)
+  } catch (error) {
+    console.error('Error publishing ticket purchase job:', error)
+  }
 }
 
-// Consume the event (process the job using a worker)
-export const consumeTicketBoughtEvent = (handler: (data: { ticketId: string, userId: string }) => void) => {
-    try {
-        // Create a new worker instance that listens for jobs in the ticket-bought queue
-        const worker = new Worker(TICKET_BOUGHT_QUEUE, async (job) => {
-            const { ticketId, userId } = job.data
-            handler({ ticketId, userId })
-            console.log(`Processed ticket bought event: ${ticketId} for user: ${userId}`)
-        }, {
-            connection: redisConfig, // Reuse the shared Redis config
-        })
+/**
+ * Publish a job to ticketBoughtQueue (after the ticket is successfully bought)
+ */
+export const publishTicketBoughtEvent = async (data: { ticketId: string, userId: string }) => {
+  try {
+    await ticketBoughtQueue.add('ticket-bought', data)
+    console.log(`Ticket bought event published: ${JSON.stringify(data)}`)
+  } catch (error) {
+    console.error('Error publishing ticket bought event:', error)
+  }
+}
 
-        worker.on('completed', (job) => {
-            if (job) {
-                console.log(`Job ${job.id} completed successfully`)
-              }
-        })
+/**
+ * Consume jobs from ticketQueue (user buying ticket)
+ */
+export const consumeTicketQueue = (handler: (data: { ticketType: string, quantity: number }) => void) => {
+  try {
+    const worker = new Worker(TICKET_QUEUE, async (job) => {
+      const { ticketType, quantity } = job.data
+      handler({ ticketType, quantity })
+      console.log(`Processed buy-ticket job: ${quantity} x ${ticketType}`)
+    }, {
+      connection: redisConfig,
+    })
 
-        worker.on('failed', (job, failedReason) => {
-            if (job) {
-                console.error(`Job ${job.id} failed due to: ${failedReason}`)
-            } else {
-                console.error('Job failed but job data was not available.')
-            }
-        })
+    worker.on('completed', (job) => {
+      console.log(`ticketQueue job ${job.id} completed successfully`)
+    })
 
-    } catch (error) {
-        console.error('Error consuming ticket bought event:', error)
-    }
+    worker.on('failed', (job, failedReason) => {
+      console.error(`ticketQueue job ${job?.id} failed due to: ${failedReason}`)
+    })
+
+  } catch (error) {
+    console.error('Error consuming ticket queue:', error)
+  }
+}
+
+/**
+ * Consume jobs from ticketBoughtQueue (after ticket is bought)
+ */
+export const consumeTicketBoughtQueue = (handler: (data: { ticketId: string, userId: string }) => void) => {
+  try {
+    const worker = new Worker(TICKET_BOUGHT_QUEUE, async (job) => {
+      const { ticketId, userId } = job.data
+      handler({ ticketId, userId })
+      console.log(`Processed ticket-bought event: Ticket ${ticketId} for User ${userId}`)
+    }, {
+      connection: redisConfig,
+    })
+
+    worker.on('completed', (job) => {
+      console.log(`ticketBoughtQueue job ${job.id} completed successfully`)
+    })
+
+    worker.on('failed', (job, failedReason) => {
+      console.error(`ticketBoughtQueue job ${job?.id} failed due to: ${failedReason}`)
+    })
+
+  } catch (error) {
+    console.error('Error consuming ticket bought queue:', error)
+  }
 }
