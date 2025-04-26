@@ -1,37 +1,25 @@
-import express from 'express'
-import { ticketQueue } from '@mq/queue'
-import { lockTicket, unlockTicket } from '@shared/lock'
+import express, { Request, Response } from 'express';
+import { buyTicket } from './ticketService';  // We'll create this service later for ticket logic
 
-const app = express()
-app.use(express.json())
+const app = express();
+const port = 3000;
 
-app.post('/tickets/reserve/:ticketId', async (req, res) => {
-  const { ticketId } = req.params
-  const { userId } = req.body
+app.use(express.json());
 
-  if (!userId) {
-    return res.status(400).json({ error: 'Missing userId' })
+// Example endpoint to simulate ticket buying
+app.post('/buy-ticket', async (req: Request, res: Response): Promise<void> =>  {
+  const { userId } = req.body;
+  
+  // Simulate the ticket-buying process
+  const result = await buyTicket(userId);
+  
+  if (result.success) {
+    res.status(200).send({ message: 'Ticket bought successfully!' });
+  } else {
+    res.status(400).send({ message: result.error });
   }
+});
 
-  const lockKey = `lock:ticket:${ticketId}`
-
-  const lockAcquired = await lockTicket(lockKey, 5000) // 5 seconds
-
-  if (!lockAcquired) {
-    return res.status(409).json({ error: 'Ticket is being reserved, try again' })
-  }
-
-  try {
-    await ticketQueue.add('reserve', { ticketId, userId })
-    return res.status(200).json({ message: 'Reservation request accepted' })
-  } catch (error) {
-    console.error('Failed to enqueue job', error)
-    return res.status(500).json({ error: 'Internal server error' })
-  } finally {
-    await unlockTicket(lockKey)
-  }
-})
-
-app.listen(3000, () => {
-  console.log('API Server running on port 3000')
-})
+app.listen(port, () => {
+  console.log(`API server listening at http://localhost:${port}`);
+});
