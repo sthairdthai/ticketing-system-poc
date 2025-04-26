@@ -18,6 +18,7 @@
     "packages/*"
   ],
   "dependencies": {
-    "bullmq": "^5.51.0"
+    "bullmq": "^5.51.0",
+    "redis": "^4.7.0"
   }
 }

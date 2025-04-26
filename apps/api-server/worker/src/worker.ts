@@ -1,5 +1,6 @@
 import { Worker, Job } from 'bullmq'
 import { redisConfig } from '../../../../packages/mq/connection' // Import the shared Redis config
+import { createClient } from 'redis'
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
