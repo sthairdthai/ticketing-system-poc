@@ -3,12 +3,19 @@ FROM node:20
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-
 RUN corepack enable && corepack prepare pnpm@latest --activate
+
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
 RUN pnpm install
 
-COPY . .
+COPY apps ./apps
+COPY packages ./packages
+COPY tools ./tools
+COPY tsconfig.json ./
+
+
 
 EXPOSE 3000
 

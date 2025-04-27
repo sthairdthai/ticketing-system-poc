@@ -1,11 +1,19 @@
-# Dockerfile.worker
 FROM node:20
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
 RUN pnpm install
 
-COPY . .
+COPY apps ./apps
+COPY packages ./packages
+COPY tools ./tools
+COPY tsconfig.json ./
+
+
+# Default command, can override later
+CMD ["pnpm", "--filter", "api-server", "run", "worker:buyTicket"]

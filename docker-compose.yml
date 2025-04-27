@@ -11,30 +11,42 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.api
-    command: pnpm run dev --filter api-server
+    working_dir: /app/apps/api-server      
+    command: ["pnpm", "--filter", "api-server", "run", "dev"]
+    volumes:
+      - .:/app    
     ports:
       - "3000:3000"
     depends_on:
       - redis
     environment:
       - REDIS_HOST=redis
+      - NODE_ENV=development
 
   worker-buy-ticket:
     build:
       context: .
       dockerfile: Dockerfile.worker
-    command: pnpm exec ts-node worker/src/workerBuyTicket.ts
+    working_dir: /app/apps/api-server      
+    command: ["pnpm", "--filter", "api-server", "run", "worker:buyTicket"]
+    volumes:
+      - .:/app    
     depends_on:
       - redis
     environment:
       - REDIS_HOST=redis
+      - NODE_ENV=development      
 
   worker-release-reservation:
     build:
       context: .
       dockerfile: Dockerfile.worker
-    command: pnpm exec ts-node worker/src/workerReleaseReservation.ts
+    working_dir: /app/apps/api-server      
+    command: ["pnpm", "--filter", "api-server", "run", "worker:releaseReservation"]
+    volumes:
+      - .:/app       
     depends_on:
       - redis
     environment:
       - REDIS_HOST=redis
+      - NODE_ENV=development      
