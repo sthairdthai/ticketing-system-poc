@@ -1,4 +1,4 @@
-import { publishTicketPurchase, addTicketReservationQueue, RELEASE_TICKET_AFTER_1S , ticketReservationQueue} from '../../../packages/mq/queue'
+import { publishTicketPurchase, addTicketReservationQueue, RELEASE_TICKET_AFTER_1S, ticketReservationQueue } from '../../../packages/mq/queue'
 
 let availableTickets: number[] = Array.from({ length: 100 }, (_, index) => index + 1); // Ticket IDs 1-100
 // In-memory map of ticketId -> reservation jobId
@@ -20,9 +20,9 @@ export const reserveTicket = async (userId: string, ticketId: number) => {
     // Add a job reservation queue
     const job = await addTicketReservationQueue({ userId, ticketId })
     if (job.id) {
-        reservationJobs.set(ticketId, job.id); // Save job ID
+      reservationJobs.set(ticketId, job.id); // Save job ID
     } else {
-        console.error(`Failed to reserve ticket ${ticketId} for user ${userId}: job ID is undefined.`);
+      console.error(`Failed to reserve ticket ${ticketId} for user ${userId}: job ID is undefined.`);
     }
     // setTimeout(() => releaseTicket(ticketId,userId), RELEASE_TICKET_AFTER_1S * 60 * 1000); // Release after 1 minutes
 
@@ -48,24 +48,32 @@ export const buyTicket = async (ticketData: any) => {
 
 
   // Cancel the reservation job if it exists
-  const jobId = reservationJobs.get(ticketId);
-  if (jobId) {
-    await ticketReservationQueue.remove(jobId);
+  const job = reservationJobs.get(ticketId);
+  if (job) {
+    await ticketReservationQueue.remove(job);
     reservationJobs.delete(ticketId);
     console.log(`Reservation job for Ticket ${ticketId} canceled.`);
   }
+  else {
+    return { success: false, error: 'No reservation found or reservation expired' };
+  }
 
-  // Add the buy-ticket job to the queue
+  if (job.data.userId !== userId) {
+    return { success: false, error: 'Reservation does not belong to this user'  };
+  }
+
+  // Add the buy-ticket job to the queue to process further, logging, data processing
   await publishTicketPurchase({ ticketId, userId });
 
   // After successfully buying the ticket, remove it from the available tickets list
-  removeTicket(ticketId);
+  await removeTicket(ticketId);
   console.log(`Ticket ${ticketId} bought by User ${userId}. Remaining tickets: ${availableTickets.length}`);
+  return { success: true, ticketId };
 };
 
 
 // Utility function to remove a ticket from the available tickets list
-const removeTicket = (ticketId: number) => {
+const removeTicket = async (ticketId: number) => {
   const ticketIndex = availableTickets.indexOf(ticketId);
   if (ticketIndex !== -1) {
     availableTickets.splice(ticketIndex, 1); // Remove the ticket from available tickets

@@ -29,7 +29,13 @@ export const addTicketReservationQueue = async (ticketData: { ticketId: number, 
 
     const job = await ticketReservationQueue.add('release-ticket',
       { ticketId: ticketData.ticketId, userId: ticketData.userId },
-      { delay: RELEASE_TICKET_AFTER_1S * 60 * 1000 } // Delay of 1 minute
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
+        jobId: ticketData.ticketId,
+        attempts: 1,
+        delay: RELEASE_TICKET_AFTER_1S * 60 * 1000
+      } // Delay of 1 minute
     );
 
     console.log(`Ticket reservation job added. Job ID: ${job.id}`);
@@ -40,3 +46,22 @@ export const addTicketReservationQueue = async (ticketData: { ticketId: number, 
     throw error;
   }
 };
+
+
+// export const async function validateAndBuyTicket(ticketId: string, userId: string) {
+//   const job = await reservationQueue.getJob(ticketId)
+
+//   if (!job) {
+//     throw new Error('No reservation found or reservation expired')
+//   }
+
+//   if (job.data.userId !== userId) {
+//     throw new Error('Reservation belongs to a different user')
+//   }
+
+//   // Valid reservation, proceed to buy
+//   await finalizePurchase(ticketId, userId)
+
+//   // Optionally, remove reservation job manually if needed
+//   await job.remove()
+// }

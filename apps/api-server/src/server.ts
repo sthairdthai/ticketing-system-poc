@@ -37,8 +37,13 @@ app.post(`/api/ticket/release`, async (req, res) => {
 // Endpoint to buy a reserved ticket
 app.post('/api/ticket/buy', async (req, res) => {
   const { ticketId, userId } = req.body;
-  await buyTicket({ ticketId, userId });
-  res.status(200).json({ success: true, message: `Ticket ${ticketId} purchased by user ${userId}` });
+  const buyRes = await buyTicket({ ticketId, userId });
+  if (buyRes.success) {
+    res.status(200).json({ success: true, message: `Ticket ${ticketId} purchased by user ${userId}` });
+  }
+  else {
+    res.status(409).json({ success: false, reason: buyRes.error ? buyRes.error : 'Ticket sold out or error' })
+  }
 });
 
 app.listen(port, () => {
