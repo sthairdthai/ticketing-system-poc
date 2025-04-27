@@ -48,9 +48,7 @@ export const releaseTicket = async (ticketId: number, userId?: string) => {
 
   availableTickets.push(ticketId); // Add the ticket back to the available pool
   console.log(`Ticket reservation expired for User ${userId} (Ticket ${ticketId}). Ticket released. Available tickets: ${availableTickets.length}`);
-
-  // // Cleanup reservationJobs map
-  // reservationJobs.delete(ticketId);
+  return { success: true, ticketId };  
 };
 
 // Function to buy a reserved ticket (publish to the queue)

@@ -30,8 +30,12 @@ app.post(`/api/ticket/release`, async (req, res) => {
     res.status(400).json({ error: 'Ticket ID is required' });
   }
   else {
-    await releaseTicket(ticketId); // Release the ticket using the service
-    res.status(200).json({ success: true, message: `Ticket ${ticketId} released successfully` });
+    const result = await releaseTicket(ticketId); // Release the ticket using the service
+    if (result.success) {
+      res.status(200).json({ success: true, message: `Ticket ${ticketId} released successfully` });
+    } else {
+      res.status(400).json(result);
+    }
   }
 });
 
