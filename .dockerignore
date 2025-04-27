@@ -11,3 +11,5 @@ npm-debug.log
 pnpm-debug.log
 Dockerfile*
 docker-compose.yml
+dist
+.dockerignore
