@@ -1,7 +1,8 @@
-import { publishTicketPurchase, addTicketReservationQueue, RELEASE_TICKET_AFTER_1S } from '../../../packages/mq/queue'
-// import { ticketReservationQueue } from '../../../packages/mq/queues/ticketReservationQueue'; // Import the queue
+import { publishTicketPurchase, addTicketReservationQueue, RELEASE_TICKET_AFTER_1S , ticketReservationQueue} from '../../../packages/mq/queue'
 
 let availableTickets: number[] = Array.from({ length: 100 }, (_, index) => index + 1); // Ticket IDs 1-100
+// In-memory map of ticketId -> reservation jobId
+const reservationJobs = new Map<number, string>();
 
 // Function to get the list of available tickets
 export const getAvailableTickets = () => {
@@ -17,8 +18,13 @@ export const reserveTicket = async (userId: string, ticketId: number) => {
     console.log(`User ${userId} reserved Ticket ${ticketId}. Remaining tickets: ${availableTickets.length}`);
 
     // Add a job reservation queue
-    await addTicketReservationQueue({ userId, ticketId })
-    setTimeout(() => releaseTicket(ticketId,userId), RELEASE_TICKET_AFTER_1S * 60 * 1000); // Release after 1 minutes
+    const job = await addTicketReservationQueue({ userId, ticketId })
+    if (job.id) {
+        reservationJobs.set(ticketId, job.id); // Save job ID
+    } else {
+        console.error(`Failed to reserve ticket ${ticketId} for user ${userId}: job ID is undefined.`);
+    }
+    // setTimeout(() => releaseTicket(ticketId,userId), RELEASE_TICKET_AFTER_1S * 60 * 1000); // Release after 1 minutes
 
     return { success: true, ticketId };
   } else {
@@ -30,12 +36,24 @@ export const reserveTicket = async (userId: string, ticketId: number) => {
 export const releaseTicket = (ticketId: number, userId?: string) => {
   availableTickets.push(ticketId); // Add the ticket back to the available pool
   console.log(`Ticket reservation expired for User ${userId} (Ticket ${ticketId}). Ticket released. Available tickets: ${availableTickets.length}`);
+
+  // Cleanup reservationJobs map
+  reservationJobs.delete(ticketId);
 };
 
 // Function to buy a reserved ticket (publish to the queue)
 export const buyTicket = async (ticketData: any) => {
   const { ticketId, userId } = ticketData;
   console.log(`User ${userId} is purchasing Ticket ${ticketId}...`);
+
+
+  // Cancel the reservation job if it exists
+  const jobId = reservationJobs.get(ticketId);
+  if (jobId) {
+    await ticketReservationQueue.remove(jobId);
+    reservationJobs.delete(ticketId);
+    console.log(`Reservation job for Ticket ${ticketId} canceled.`);
+  }
 
   // Add the buy-ticket job to the queue
   await publishTicketPurchase({ ticketId, userId });

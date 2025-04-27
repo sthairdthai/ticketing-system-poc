@@ -3,7 +3,6 @@ import axios from 'axios';
 // Config
 const API_BASE_URL = 'http://localhost:3000/api/ticket'; // Adjust the URL if necessary
 const TOTAL_USERS = 10000;
-const TOTAL_TICKETS = 100;
 
 // Utility function to simulate random time intervals
 const getRandomTime = (min, max) => Math.floor(Math.random() * (max - min) + min);
@@ -43,7 +42,7 @@ const simulateUserAction = async (userId) => {
       console.log(`User ${userId} successfully reserved Ticket ${ticketId}`);
       
       // Simulate a random delay before buying the ticket
-      const buyDelay = getRandomTime(500, 3000); // Random delay between 500ms to 3s
+      const buyDelay = getRandomTime(500, 1000); // Random delay between 500ms to 3s
       setTimeout(async () => {
         console.log(`User ${userId} is attempting to buy Ticket ${ticketId}`);
         await axios.post(`${API_BASE_URL}/buy`, {
