@@ -1,6 +1,6 @@
-import { Worker, Job } from 'bullmq';
-import { redisConfig } from '../../../../packages/mq/connection';
-import { TICKET_QUEUE } from '../../../../packages/mq/queue';  // Adjust the path to queue.ts if needed
+import { Worker, Job, Queue } from 'bullmq';
+import { redisConfig } from '../../../packages/mq/connection';
+import { TICKET_QUEUE } from '../../../packages/mq/queue'
 
 const worker = new Worker(TICKET_QUEUE, async (job: Job) => {
     const { ticketId, userId } = job.data;

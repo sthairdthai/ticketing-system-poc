@@ -1,12 +1,11 @@
 {
-  "name": "api-server",
+  "name": "worker",
   "version": "1.0.0",
   "description": "",
-  "main": "src/server.ts",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node src/server.ts",
-    "api-server": "ts-node src/server.ts"
+    "worker:buyTicket": "ts-node src/workerBuyTicket.ts",
+    "worker:releaseReservation": "ts-node src/workerReleaseReservation.ts"
   },
   "keywords": [],
   "author": "",

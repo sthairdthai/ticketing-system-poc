@@ -11,12 +11,15 @@
       "baseUrl": ".",
       "paths": {
         "@shared/*": ["packages/shared/src/*"],
-        "@mq/*": ["packages/mq/src/*"]
+        "@mq/*": ["packages/mq/src/*"],
+        "@db/*": ["packages/db/*"],
       }
     },
     "include": [
       "apps/**/*",
-      "packages/**/*"
-    ]
+      "packages/**/*",
+      "tools/**/*"
+    ],
+    "exclude": ["node_modules", "dist"]
   }
   

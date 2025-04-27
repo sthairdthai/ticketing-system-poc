@@ -1,7 +1,7 @@
 import { Worker, Job } from 'bullmq';
-import { TICKET_RESERVATION_QUEUE } from '../../../../packages/mq/queue';  
+import { TICKET_RESERVATION_QUEUE } from '../../../packages/mq/queue';  
 // import { releaseTicket } from '../../../api-server//src//ticketService';
-import { redisConfig } from '../../../../packages/mq/connection';
+import { redisConfig } from '../../../packages/mq/connection';
 import axios from 'axios'; // Importing axios to make API calls
 
 const API_BASE_URL = 'http://localhost:3000/api/ticket'; // Adjust the URL if necessary
