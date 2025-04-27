@@ -12,7 +12,7 @@ services:
       context: .
       dockerfile: Dockerfile.api
     working_dir: /app/apps/api-server      
-    command: ["pnpm", "--filter", "api-server", "run", "dev"]
+    command: ["pnpm", "run", "dev", "--filter", "api-server"]
     volumes:
       - .:/app    
     ports:
@@ -27,8 +27,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.worker
-    working_dir: /app/apps/api-server      
-    command: ["pnpm", "--filter", "api-server", "run", "worker:buyTicket"]
+    working_dir: /app/apps/worker   
+    command: ["pnpm", "run", "worker:buyTicket"]
     volumes:
       - .:/app    
     depends_on:
@@ -41,8 +41,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.worker
-    working_dir: /app/apps/api-server      
-    command: ["pnpm", "--filter", "api-server", "run", "worker:releaseReservation"]
+    working_dir: /app/apps/worker
+    command: ["pnpm", "run", "worker:releaseReservation"] 
     volumes:
       - .:/app       
     depends_on:

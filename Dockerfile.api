@@ -5,17 +5,18 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api-server/package*.json ./
+# COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 RUN pnpm install
 
-COPY apps ./apps
-COPY packages ./packages
-COPY tools ./tools
-COPY tsconfig.json ./
+# COPY apps ./apps
+# COPY packages ./packages
+# COPY tools ./tools
+# COPY tsconfig.json ./
 
-
+# Now copy the rest of your source code (excluding node_modules because of .dockerignore)
+COPY apps/api-server .
 
 EXPOSE 3000
 
