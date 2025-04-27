@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  api-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    command: pnpm run dev --filter api-server
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+
+  worker-buy-ticket:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    command: pnpm exec ts-node worker/src/workerBuyTicket.ts
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+
+  worker-release-reservation:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    command: pnpm exec ts-node worker/src/workerReleaseReservation.ts
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
