@@ -23,6 +23,7 @@ app.post('/api/ticket/reserve', async (req, res) => {
   }
 });
 
+// Should be for internal network only. behind firewall
 app.post(`/api/ticket/release`, async (req, res) => {
   const { ticketId } = req.body;
   if (!ticketId) {

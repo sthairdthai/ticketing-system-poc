@@ -14,7 +14,7 @@ export const reserveTicket = async (userId: string, ticketId: number) => {
 
   const ticketIndex = availableTickets.indexOf(ticketId); // Find the index of the specific ticket
   if (ticketIndex !== -1) { // Check if the ticket exists in the available list
-    removeTicket(ticketId); // Remove the ticket using the utility function
+    await removeTicket(ticketId); // Remove the ticket using the utility function
     console.log(`User ${userId} reserved Ticket ${ticketId}. Remaining tickets: ${availableTickets.length}`);
 
     // Add a job reservation queue
@@ -33,22 +33,8 @@ export const reserveTicket = async (userId: string, ticketId: number) => {
   }
 };
 
-export const releaseTicket = (ticketId: number, userId?: string) => {
-  availableTickets.push(ticketId); // Add the ticket back to the available pool
-  console.log(`Ticket reservation expired for User ${userId} (Ticket ${ticketId}). Ticket released. Available tickets: ${availableTickets.length}`);
-
-
-  
-  // Cleanup reservationJobs map
-  reservationJobs.delete(ticketId);
-};
-
-// Function to buy a reserved ticket (publish to the queue)
-export const buyTicket = async (ticketData: any) => {
-  const { ticketId, userId } = ticketData;
-  console.log(`User ${userId} is purchasing Ticket ${ticketId}...`);
-
-
+export const releaseTicket = async (ticketId: number, userId?: string) => {
+  // TODO: extract to function
   // Cancel the reservation job if it exists
   const job = reservationJobs.get(ticketId);
   if (job) {
@@ -59,6 +45,38 @@ export const buyTicket = async (ticketData: any) => {
   else {
     return { success: false, error: 'No reservation found or reservation expired' };
   }
+
+  availableTickets.push(ticketId); // Add the ticket back to the available pool
+  console.log(`Ticket reservation expired for User ${userId} (Ticket ${ticketId}). Ticket released. Available tickets: ${availableTickets.length}`);
+
+  // // Cleanup reservationJobs map
+  // reservationJobs.delete(ticketId);
+};
+
+// Function to buy a reserved ticket (publish to the queue)
+export const buyTicket = async (ticketData: any) => {
+  const { ticketId, userId } = ticketData;
+  console.log(`User ${userId} is purchasing Ticket ${ticketId}...`);
+
+  // Function to buy a reserved ticket (publish to the queue)
+  // export const buyTicket = async (ticketData: any) => {
+  //   const { ticketId, userId } = ticketData;
+  //   console.log(`User ${userId} is purchasing Ticket ${ticketId}...`);
+
+
+    // TODO: extract to function
+    // Cancel the reservation job if it exists
+    const job = reservationJobs.get(ticketId);
+    if (job) {
+      console.log(`Remove Reservation job from ticketReservationQueue for Ticket:${ticketId} _ job:${job}`)
+      await ticketReservationQueue.remove(job);
+      reservationJobs.delete(ticketId);
+      console.log(`Reservation job for Ticket:${ticketId} _ Job:${job} canceled.`);
+    }
+    else {
+      console.log(`No reservation found or reservation expired Ticket :  ${ticketId} `);
+      return { success: false, error: 'No reservation found or reservation expired' };
+    }
 
   // if (job.data.userId !== userId) {
   //   return { success: false, error: 'Reservation does not belong to this user'  };

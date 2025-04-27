@@ -1,6 +1,6 @@
 import { Worker, Job } from 'bullmq';
 import { TICKET_RESERVATION_QUEUE } from '../../../../packages/mq/queue';  
-import { releaseTicket } from '../../../api-server//src//ticketService';
+// import { releaseTicket } from '../../../api-server//src//ticketService';
 import { redisConfig } from '../../../../packages/mq/connection';
 import axios from 'axios'; // Importing axios to make API calls
 
