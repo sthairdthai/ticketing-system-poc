@@ -1,0 +1,28 @@
+# Use node 20 as base image
+FROM node:20
+
+WORKDIR /app
+
+# Enable Corepack for package manager
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy the workspace definitions and install dependencies
+# COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy the workspace files (including pnpm-lock.yaml from the root)
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+
+
+RUN pnpm install
+
+# Copy the worker code
+COPY apps /app/apps
+COPY packages /app/packages
+COPY tools /app/tools
+COPY tsconfig.json /app/tsconfig.json
+
+# Set working directory to the worker (could be different per worker, adjust accordingly)
+WORKDIR /app/apps/worker
+
+# Default command to run a worker (can be overridden by docker-compose)
+CMD ["pnpm", "run", "worker:buyTicket"]

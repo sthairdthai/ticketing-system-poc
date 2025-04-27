@@ -1,0 +1,32 @@
+# Use node 20 as base image
+FROM node:20
+
+WORKDIR /app
+
+# Enable Corepack for package manager
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# # Copy only api-server dependencies (package.json and lock file)
+# COPY apps/api-server/package.json apps/api-server/pnpm-lock.yaml ./ 
+
+# Copy the workspace files (including pnpm-lock.yaml from the root)
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+
+# Install dependencies
+RUN pnpm install
+
+# # Copy the rest of the api-server code
+# COPY apps/api-server .
+
+# Copy the API server code
+COPY apps/api-server /app/apps/api-server
+
+
+# Set working directory to the API server
+WORKDIR /app/apps/api-server
+
+# Expose port 3000
+EXPOSE 3000
+
+# Default command to run api server
+CMD ["pnpm", "run", "dev", "--filter", "api-server"]

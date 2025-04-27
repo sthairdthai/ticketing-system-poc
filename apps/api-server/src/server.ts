@@ -1,37 +1,56 @@
-import express from 'express'
-import { ticketQueue } from '@mq/queue'
-import { lockTicket, unlockTicket } from '@shared/lock'
+import express from 'express';
+import { reserveTicket, buyTicket, getAvailableTickets, releaseTicket } from './ticketService'; // Adjust path as needed
 
-const app = express()
-app.use(express.json())
+const app = express();
+const port = 3000;
 
-app.post('/tickets/reserve/:ticketId', async (req, res) => {
-  const { ticketId } = req.params
-  const { userId } = req.body
+app.use(express.json());
 
-  if (!userId) {
-    return res.status(400).json({ error: 'Missing userId' })
+// Endpoint to get available tickets
+app.get('/api/ticket/available', (req, res) => {
+  const availableTickets = getAvailableTickets(); // Get the list of available tickets
+  res.json({ availableTickets });
+});
+
+// Endpoint to reserve a ticket
+app.post('/api/ticket/reserve', async (req, res) => {
+  const { userId, ticketId } = req.body;
+  const result = await reserveTicket(userId, ticketId);
+  if (result.success) {
+    res.status(200).json({ success: true, ticketId: result.ticketId });
+  } else {
+    res.status(409).json(result);
   }
+});
 
-  const lockKey = `lock:ticket:${ticketId}`
-
-  const lockAcquired = await lockTicket(lockKey, 5000) // 5 seconds
-
-  if (!lockAcquired) {
-    return res.status(409).json({ error: 'Ticket is being reserved, try again' })
+// Should be for internal network only. behind firewall
+app.post(`/api/ticket/release`, async (req, res) => {
+  const { ticketId } = req.body;
+  if (!ticketId) {
+    res.status(400).json({ error: 'Ticket ID is required' });
   }
-
-  try {
-    await ticketQueue.add('reserve', { ticketId, userId })
-    return res.status(200).json({ message: 'Reservation request accepted' })
-  } catch (error) {
-    console.error('Failed to enqueue job', error)
-    return res.status(500).json({ error: 'Internal server error' })
-  } finally {
-    await unlockTicket(lockKey)
+  else {
+    const result = await releaseTicket(ticketId); // Release the ticket using the service
+    if (result.success) {
+      res.status(200).json({ success: true, message: `Ticket ${ticketId} released successfully` });
+    } else {
+      res.status(409).json(result);
+    }
   }
-})
+});
 
-app.listen(3000, () => {
-  console.log('API Server running on port 3000')
-})
+// Endpoint to buy a reserved ticket
+app.post('/api/ticket/buy', async (req, res) => {
+  const { ticketId, userId } = req.body;
+  const buyRes = await buyTicket({ ticketId, userId });
+  if (buyRes.success) {
+    res.status(200).json({ success: true, message: `Ticket ${ticketId} purchased by user ${userId}` });
+  }
+  else {
+    res.status(409).json({ success: false, reason: buyRes.error ? buyRes.error : 'Ticket sold out or error' })
+  }
+});
+
+app.listen(port, () => {
+  console.log(`API server running at http://localhost:${port}`);
+});
