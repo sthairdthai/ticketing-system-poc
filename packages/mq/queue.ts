@@ -32,7 +32,7 @@ export const addTicketReservationQueue = async (ticketData: { ticketId: number, 
       {
         removeOnComplete: true,
         removeOnFail: true,
-        jobId: ticketData.ticketId,
+        // jobId: ticketData.ticketId,
         attempts: 1,
         delay: RELEASE_TICKET_AFTER_1S * 60 * 1000
       } // Delay of 1 minute

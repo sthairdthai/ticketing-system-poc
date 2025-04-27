@@ -37,6 +37,8 @@ export const releaseTicket = (ticketId: number, userId?: string) => {
   availableTickets.push(ticketId); // Add the ticket back to the available pool
   console.log(`Ticket reservation expired for User ${userId} (Ticket ${ticketId}). Ticket released. Available tickets: ${availableTickets.length}`);
 
+
+  
   // Cleanup reservationJobs map
   reservationJobs.delete(ticketId);
 };
@@ -58,9 +60,9 @@ export const buyTicket = async (ticketData: any) => {
     return { success: false, error: 'No reservation found or reservation expired' };
   }
 
-  if (job.data.userId !== userId) {
-    return { success: false, error: 'Reservation does not belong to this user'  };
-  }
+  // if (job.data.userId !== userId) {
+  //   return { success: false, error: 'Reservation does not belong to this user'  };
+  // }
 
   // Add the buy-ticket job to the queue to process further, logging, data processing
   await publishTicketPurchase({ ticketId, userId });

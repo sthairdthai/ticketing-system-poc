@@ -5,6 +5,6 @@ export const redisConfig = {
   port: 6379,        // Redis port
 };
 
-export const ticketQueue = new Queue('ticketQueue', {
-  connection: redisConfig,
-});
+// export const ticketQueue = new Queue('ticketQueue', {
+//   connection: redisConfig,
+// });
