@@ -19,7 +19,7 @@ app.post('/api/ticket/reserve', async (req, res) => {
   if (result.success) {
     res.status(200).json({ success: true, ticketId: result.ticketId });
   } else {
-    res.status(400).json(result);
+    res.status(409).json(result);
   }
 });
 
@@ -34,7 +34,7 @@ app.post(`/api/ticket/release`, async (req, res) => {
     if (result.success) {
       res.status(200).json({ success: true, message: `Ticket ${ticketId} released successfully` });
     } else {
-      res.status(400).json(result);
+      res.status(409).json(result);
     }
   }
 });

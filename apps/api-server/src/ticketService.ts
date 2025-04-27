@@ -34,21 +34,15 @@ export const reserveTicket = async (userId: string, ticketId: number) => {
 };
 
 export const releaseTicket = async (ticketId: number, userId?: string) => {
-  // TODO: extract to function
   // Cancel the reservation job if it exists
-  const job = reservationJobs.get(ticketId);
-  if (job) {
-    await ticketReservationQueue.remove(job);
-    reservationJobs.delete(ticketId);
-    console.log(`Reservation job for Ticket ${ticketId} canceled.`);
-  }
-  else {
-    return { success: false, error: 'No reservation found or reservation expired' };
+  const releaseResult = await releaseReserveTicketQueue(ticketId);
+  if (!releaseResult?.success) {
+    return { success: false, error: releaseResult?.error };
   }
 
   availableTickets.push(ticketId); // Add the ticket back to the available pool
   console.log(`Ticket reservation expired for User ${userId} (Ticket ${ticketId}). Ticket released. Available tickets: ${availableTickets.length}`);
-  return { success: true, ticketId };  
+  return { success: true, ticketId };
 };
 
 // Function to buy a reserved ticket (publish to the queue)
@@ -56,25 +50,11 @@ export const buyTicket = async (ticketData: any) => {
   const { ticketId, userId } = ticketData;
   console.log(`User ${userId} is purchasing Ticket ${ticketId}...`);
 
-  // Function to buy a reserved ticket (publish to the queue)
-  // export const buyTicket = async (ticketData: any) => {
-  //   const { ticketId, userId } = ticketData;
-  //   console.log(`User ${userId} is purchasing Ticket ${ticketId}...`);
-
-
-    // TODO: extract to function
-    // Cancel the reservation job if it exists
-    const job = reservationJobs.get(ticketId);
-    if (job) {
-      console.log(`Remove Reservation job from ticketReservationQueue for Ticket:${ticketId} _ job:${job}`)
-      await ticketReservationQueue.remove(job);
-      reservationJobs.delete(ticketId);
-      console.log(`Reservation job for Ticket:${ticketId} _ Job:${job} canceled.`);
-    }
-    else {
-      console.log(`No reservation found or reservation expired Ticket :  ${ticketId} `);
-      return { success: false, error: 'No reservation found or reservation expired' };
-    }
+  // Cancel the reservation job if it exists
+  const releaseResult = await releaseReserveTicketQueue(ticketId);
+  if (!releaseResult?.success) {
+    return { success: false, error: releaseResult?.error };
+  }
 
   // if (job.data.userId !== userId) {
   //   return { success: false, error: 'Reservation does not belong to this user'  };
@@ -100,3 +80,18 @@ const removeTicket = async (ticketId: number) => {
     console.log(`Ticket ${ticketId} is already removed or not found.`);
   }
 };
+
+
+async function releaseReserveTicketQueue(ticketId: number) {
+  // Cancel the reservation job if it exists
+  const job = reservationJobs.get(ticketId);
+  if (job) {
+    await ticketReservationQueue.remove(job);
+    reservationJobs.delete(ticketId);
+    console.log(`Reservation job for Ticket ${ticketId} canceled.`);
+    return { success: true, message: `Reservation job for Ticket ${ticketId} canceled.` };
+  }
+  else {
+    return { success: false, error: 'No reservation found or reservation expired' };
+  }
+}
