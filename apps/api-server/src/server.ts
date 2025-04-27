@@ -1,5 +1,5 @@
 import express from 'express';
-import { reserveTicket, buyTicket, getAvailableTickets } from './ticketService'; // Adjust path as needed
+import { reserveTicket, buyTicket, getAvailableTickets, releaseTicket } from './ticketService'; // Adjust path as needed
 
 const app = express();
 const port = 3000;
@@ -20,6 +20,17 @@ app.post('/api/ticket/reserve', async (req, res) => {
     res.status(200).json({ success: true, ticketId: result.ticketId });
   } else {
     res.status(400).json(result);
+  }
+});
+
+app.post(`/api/ticket/release`, async (req, res) => {
+  const { ticketId } = req.body;
+  if (!ticketId) {
+    res.status(400).json({ error: 'Ticket ID is required' });
+  }
+  else {
+    await releaseTicket(ticketId); // Release the ticket using the service
+    res.status(200).json({ success: true, message: `Ticket ${ticketId} released successfully` });
   }
 });
 

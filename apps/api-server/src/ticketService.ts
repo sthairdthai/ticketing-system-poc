@@ -18,7 +18,7 @@ export const reserveTicket = async (userId: string, ticketId: number) => {
 
     // Add a job reservation queue
     await addTicketReservationQueue({ userId, ticketId })
-    setTimeout(() => releaseTicket(userId, ticketId), RELEASE_TICKET_AFTER_1S * 60 * 1000); // Release after 1 minutes
+    setTimeout(() => releaseTicket(ticketId,userId), RELEASE_TICKET_AFTER_1S * 60 * 1000); // Release after 1 minutes
 
     return { success: true, ticketId };
   } else {
@@ -27,8 +27,7 @@ export const reserveTicket = async (userId: string, ticketId: number) => {
   }
 };
 
-// Function to release a reserved ticket
-export const releaseTicket = (userId: string, ticketId: number) => {
+export const releaseTicket = (ticketId: number, userId?: string) => {
   availableTickets.push(ticketId); // Add the ticket back to the available pool
   console.log(`Ticket reservation expired for User ${userId} (Ticket ${ticketId}). Ticket released. Available tickets: ${availableTickets.length}`);
 };
